@@ -3,6 +3,7 @@ package ru.lexp.lexpbot.service;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -18,7 +19,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.lexp.lexpbot.config.BotConfig;
+import ru.lexp.lexpbot.entities.Ads;
 import ru.lexp.lexpbot.entities.User;
+import ru.lexp.lexpbot.repositories.AdsRepository;
 import ru.lexp.lexpbot.repositories.UserRepository;
 
 import java.util.ArrayList;
@@ -30,6 +33,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AdsRepository adsRepository;
 
     private static final String HELP_TEXT = "Я тут бота замутил, тащи пивасик, обмоем!!!!\n\n" +
             "/start - начни работу с чат ботом, зарегайся\n\n" +
@@ -210,6 +216,17 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
         } catch (TelegramApiException e) {
             log.error("Error: " + e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 * * * * *")
+    private void sendAds() {
+        var ads = adsRepository.findAll();
+        var users = userRepository.findAll();
+        for(Ads ad: ads) {
+            for(User user: users) {
+                prepareAndSendMessage(user.getChatId(),  ad.getAd());
+            }
         }
     }
 }
