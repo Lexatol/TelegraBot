@@ -219,7 +219,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "${cron.scheduler}")
     private void sendAds() {
         var ads = adsRepository.findAll();
         var users = userRepository.findAll();
